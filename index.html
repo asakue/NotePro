@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Простое и удобное приложение для заметок с возможностью форматирования текста, тегами и поиском">
+  <meta name="keywords" content="заметки, ноты, текст, приложение, бесплатно, локальное хранение">
+  <meta name="author" content="asakue">
+  <title>NotePro - Расширенные заметки</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="generated-icon.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>Меню</h2>
+        <button id="toggleSidebar" class="icon-button" title="Закрыть меню">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </div>
+      <div class="theme-switch-wrapper">
+        <span>Тема</span>
+        <label class="theme-switch" for="themeToggle">
+          <input type="checkbox" id="themeToggle">
+          <div class="slider round">
+            <i class="fas fa-sun"></i>
+            <i class="fas fa-moon"></i>
+          </div>
+        </label>
+      </div>
+      <div class="sidebar-section">
+        <h3>Теги</h3>
+        <div id="tagsList" class="tags-list"></div>
+      </div>
+      <div class="sidebar-section">
+        <h3>Управление</h3>
+        <button id="exportNotes" class="sidebar-button">
+          <i class="fas fa-file-export"></i> Экспорт заметок
+        </button>
+        <button id="importNotes" class="sidebar-button">
+          <i class="fas fa-file-import"></i> Импорт заметок
+        </button>
+        <button id="clearAllNotes" class="sidebar-button danger-button">
+          <i class="fas fa-trash-alt"></i> Очистить все
+        </button>
+        <input type="file" id="importFile" accept=".json" style="display: none;">
+      </div>
+      <div class="keyboard-shortcuts">
+        <h3>Горячие клавиши</h3>
+        <div class="shortcut-item">
+          <span class="key">Ctrl+N</span>
+          <span class="description">Новая заметка</span>
+        </div>
+        <div class="shortcut-item">
+          <span class="key">Ctrl+F</span>
+          <span class="description">Поиск</span>
+        </div>
+        <div class="shortcut-item">
+          <span class="key">Esc</span>
+          <span class="description">Закрыть окно</span>
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <p>Версия 2.5</p>
+      </div>
+    </div>
+
+    <div class="main-content">
+      <header>
+        <div class="header-left">
+          <button id="menuToggle" class="icon-button" title="Открыть меню">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h1>NotePro <span class="subtitle">Умные заметки</span></h1>
+        </div>
+        <div class="header-controls">
+          <div class="view-controls">
+            <button id="gridView" class="view-button active" title="Сетка">
+              <i class="fas fa-th-large"></i>
+            </button>
+            <button id="listView" class="view-button" title="Список">
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
+          <select id="sortNotes" class="sort-select">
+            <option value="updated">По дате обновления</option>
+            <option value="created">По дате создания</option>
+            <option value="title">По названию</option>
+          </select>
+          <button id="addNote" class="add-button">
+            <i class="fas fa-plus"></i> Новая заметка
+          </button>
+        </div>
+      </header>
+
+      <div class="search-bar">
+        <div class="search-wrapper">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="searchNotes" placeholder="Поиск заметок..." class="search-input">
+          <button id="clearSearch" class="clear-search" style="display: none;">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="filter-tags">
+        <div id="activeFilters" class="active-filters"></div>
+      </div>
+
+      <div id="notes" class="notes-grid"></div>
+
+      <div id="noNotesMessage" class="no-notes-message" style="display: none;">
+        <i class="fas fa-sticky-note"></i>
+        <p>У вас пока нет заметок. Создайте первую!</p>
+        <button id="createFirstNote" class="primary-button">Создать заметку</button>
+      </div>
+
+      <div id="noSearchResults" class="no-notes-message" style="display: none;">
+        <i class="fas fa-search"></i>
+        <p>Ничего не найдено. Попробуйте изменить поисковый запрос.</p>
+      </div>
+    </div>
+
+    <div id="noteModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Редактировать заметку</h2>
+          <button id="closeModal" class="close-button">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="note-options">
+            <div class="note-color-selector">
+              <span>Цвет:</span>
+              <div class="color-options">
+                <button class="color-option" data-color="default" style="background-color: var(--note-bg);"></button>
+                <button class="color-option" data-color="blue" style="background-color: var(--note-blue);"></button>
+                <button class="color-option" data-color="green" style="background-color: var(--note-green);"></button>
+                <button class="color-option" data-color="purple" style="background-color: var(--note-purple);"></button>
+                <button class="color-option" data-color="pink" style="background-color: var(--note-pink);"></button>
+                <button class="color-option" data-color="yellow" style="background-color: var(--note-yellow);"></button>
+              </div>
+            </div>
+            <div class="note-pin">
+              <label for="pinNote">
+                <input type="checkbox" id="pinNote">
+                <span>Закрепить</span>
+              </label>
+            </div>
+          </div>
+          <input type="text" id="modalNoteTitle" class="note-title" placeholder="Заголовок">
+          <div class="editor-toolbar">
+            <button type="button" data-command="bold" title="Жирный"><i class="fas fa-bold"></i></button>
+            <button type="button" data-command="italic" title="Курсив"><i class="fas fa-italic"></i></button>
+            <button type="button" data-command="underline" title="Подчеркнутый"><i class="fas fa-underline"></i></button>
+            <button type="button" data-command="strikeThrough" title="Зачеркнутый"><i class="fas fa-strikethrough"></i></button>
+            <button type="button" data-command="insertUnorderedList" title="Маркированный список"><i class="fas fa-list-ul"></i></button>
+            <button type="button" data-command="insertOrderedList" title="Нумерованный список"><i class="fas fa-list-ol"></i></button>
+            <button type="button" data-command="createLink" title="Вставить ссылку"><i class="fas fa-link"></i></button>
+            <button type="button" data-command="insertImage" title="Вставить изображение"><i class="fas fa-image"></i></button>
+          </div>
+          <div id="modalNoteContent" class="rich-text-editor" contenteditable="true"></div>
+          <div class="tags-container">
+            <div class="tags-input-container">
+              <label for="noteTags">Теги:</label>
+              <input type="text" id="noteTags" placeholder="Добавьте теги через запятую...">
+              <button id="addTag" class="tag-add-button"><i class="fas fa-plus"></i></button>
+            </div>
+            <div id="noteTagsList" class="note-tags-list"></div>
+            <div id="suggestedTags" class="suggested-tags">
+              <span class="suggested-tags-title">Предложенные теги:</span>
+              <div id="suggestedTagsList" class="suggested-tags-list"></div>
+            </div>
+          </div>
+          <div class="note-stats">
+            <span id="wordCount">0 слов</span>
+            <span id="charCount">0 символов</span>
+            <span id="readingTime">0 мин. чтения</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <div class="modal-footer-left">
+            <button id="deleteNote" class="delete-button">
+              <i class="fas fa-trash"></i> Удалить
+            </button>
+            <button id="copyLink" class="copy-button">
+              <i class="fas fa-share-alt"></i> Поделиться
+            </button>
+          </div>
+          <button id="saveNote" class="save-button">
+            <i class="fas fa-save"></i> Сохранить
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Share modal -->
+    <div id="shareModal" class="modal">
+      <div class="modal-content share-modal-content">
+        <div class="modal-header">
+          <h2>Поделиться заметкой</h2>
+          <button id="closeShareModal" class="close-button">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Скопируйте ссылку, чтобы поделиться заметкой:</p>
+          <div class="share-link-container">
+            <input type="text" id="shareLink" readonly>
+            <button id="copyShareLink" class="copy-share-button">
+              <i class="fas fa-copy"></i> Копировать
+            </button>
+          </div>
+          <div class="share-options">
+            <button class="share-option" data-platform="whatsapp">
+              <i class="fab fa-whatsapp"></i> WhatsApp
+            </button>
+            <button class="share-option" data-platform="telegram">
+              <i class="fab fa-telegram-plane"></i> Telegram
+            </button>
+            <button class="share-option" data-platform="email">
+              <i class="fas fa-envelope"></i> Email
+            </button>
+          </div>
+          <div class="qr-code-container">
+            <div id="qrCode"></div>
+            <button id="downloadQR" class="download-qr-button">
+              <i class="fas fa-download"></i> Скачать QR-код
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reminder modal -->
+    <div id="reminderModal" class="modal">
+      <div class="modal-content reminder-modal-content">
+        <div class="modal-header">
+          <h2>Установить напоминание</h2>
+          <button id="closeReminderModal" class="close-button">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="reminder-form">
+            <div class="form-group">
+              <label for="reminderDate">Дата:</label>
+              <input type="date" id="reminderDate">
+            </div>
+            <div class="form-group">
+              <label for="reminderTime">Время:</label>
+              <input type="time" id="reminderTime">
+            </div>
+            <div class="form-group">
+              <label for="reminderText">Текст напоминания:</label>
+              <input type="text" id="reminderText" placeholder="О чем напомнить?">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="cancelReminder" class="cancel-button">Отмена</button>
+          <button id="saveReminder" class="save-button">
+            <i class="fas fa-bell"></i> Установить
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Toast container for notifications -->
+    <div class="toast-container"></div>
+  </div>
+  
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-section">
+        <p>NotePro &copy; <span id="currentYear">2025</span></p>
+      </div>
+      <div class="footer-section">
+        <p>by <a href="https://github.com/asakue" target="_blank">asakue</a></p>
+      </div>
+      <div class="footer-section">
+        <button id="showAbout" class="footer-link">О проекте</button>
+        <button id="showPrivacy" class="footer-link">Конфиденциальность</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- About modal -->
+  <div id="aboutModal" class="modal">
+    <div class="modal-content about-modal-content">
+      <div class="modal-header">
+        <h2>О проекте NotePro</h2>
+        <button id="closeAboutModal" class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>NotePro - это приложение для создания и управления заметками, которое хранит все данные локально в вашем браузере.</p>
+        <h3>Возможности:</h3>
+        <ul>
+          <li>Создание и редактирование заметок с форматированием</li>
+          <li>Организация заметок с помощью тегов</li>
+          <li>Поиск и фильтрация</li>
+          <li>Темная и светлая темы</li>
+          <li>Экспорт и импорт данных</li>
+          <li>Закрепление важных заметок</li>
+          <li>Генерация QR-кодов для заметок</li>
+        </ul>
+        <p>Версия 2.5</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Privacy modal -->
+  <div id="privacyModal" class="modal">
+    <div class="modal-content privacy-modal-content">
+      <div class="modal-header">
+        <h2>Политика конфиденциальности</h2>
+        <button id="closePrivacyModal" class="close-button">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>NotePro уважает вашу конфиденциальность и обеспечивает сохранность ваших данных.</p>
+        <h3>Хранение данных:</h3>
+        <p>Все ваши заметки хранятся исключительно в локальном хранилище вашего браузера и не передаются на какие-либо серверы.</p>
+        <h3>Сбор информации:</h3>
+        <p>Приложение не собирает никакой персональной информации о пользователях.</p>
+        <h3>Cookies:</h3>
+        <p>Приложение не использует cookies для отслеживания пользователей.</p>
+        <h3>Безопасность:</h3>
+        <p>Рекомендуется регулярно экспортировать заметки для создания резервных копий, так как данные в локальном хранилище могут быть утеряны при очистке браузера.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/utils.js"></script>
+  <script src="js/note.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/richText.js"></script>
+  <script src="js/tags.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/reminder.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

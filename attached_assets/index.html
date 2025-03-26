@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>NotePro - Enhanced Notes App</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>NotePro</h2>
+        <button id="toggleSidebar" class="toggle-sidebar">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+      
+      <div class="sidebar-section">
+        <h3>Filters</h3>
+        <div class="filter-option" data-filter="all">
+          <i class="fas fa-sticky-note"></i> All Notes
+        </div>
+        <div class="filter-option" data-filter="pinned">
+          <i class="fas fa-thumbtack"></i> Pinned
+        </div>
+        <div class="filter-option" data-filter="recent">
+          <i class="fas fa-clock"></i> Recent
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <h3>Tags</h3>
+        <div id="tagsList" class="tags-list">
+          <!-- Tags will be dynamically added here -->
+        </div>
+      </div>
+      
+      <div class="sidebar-section">
+        <h3>Settings</h3>
+        <div id="themeToggle" class="setting-option">
+          <i class="fas fa-moon"></i> Dark Mode
+          <div class="toggle-switch">
+            <input type="checkbox" id="darkModeToggle">
+            <label for="darkModeToggle"></label>
+          </div>
+        </div>
+        <div id="exportNotes" class="setting-option">
+          <i class="fas fa-file-export"></i> Export Notes
+        </div>
+        <div id="importNotes" class="setting-option">
+          <i class="fas fa-file-import"></i> Import Notes
+          <input type="file" id="importFile" accept=".json" style="display: none;">
+        </div>
+        <div id="clearAllNotes" class="setting-option">
+          <i class="fas fa-trash"></i> Clear All Notes
+        </div>
+      </div>
+    </aside>
+    
+    <main class="main-content">
+      <header class="main-header">
+        <div class="search-container">
+          <input type="text" id="searchNotes" placeholder="Search notes..." class="search-input">
+          <button id="clearSearch" class="clear-search-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <div class="header-controls">
+          <div class="view-controls">
+            <button id="gridView" class="view-btn active" title="Grid View">
+              <i class="fas fa-th"></i>
+            </button>
+            <button id="listView" class="view-btn" title="List View">
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
+          
+          <div class="sort-controls">
+            <select id="sortNotes" class="sort-select">
+              <option value="updated">Last Updated</option>
+              <option value="created">Date Created</option>
+              <option value="title">By Title</option>
+            </select>
+          </div>
+          
+          <button id="addNote" class="add-button" title="Add New Note">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+      </header>
+      
+      <div class="active-filters" id="activeFilters">
+        <!-- Active filters will be shown here -->
+      </div>
+      
+      <div id="notes" class="notes-grid">
+        <!-- Notes will be dynamically added here -->
+      </div>
+    </main>
+  </div>
+  
+  <!-- Note Modal -->
+  <div id="noteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <input type="text" id="modalNoteTitle" class="modal-title-input" placeholder="Title">
+        <div class="modal-actions">
+          <button id="shareNote" class="modal-action-btn" title="Share">
+            <i class="fas fa-share-alt"></i>
+          </button>
+          <button id="reminderNote" class="modal-action-btn" title="Set Reminder">
+            <i class="fas fa-bell"></i>
+          </button>
+          <button id="pinNote" class="modal-action-btn" title="Pin Note">
+            <i class="fas fa-thumbtack"></i>
+          </button>
+          <button id="deleteNote" class="modal-action-btn danger" title="Delete">
+            <i class="fas fa-trash"></i>
+          </button>
+          <button id="closeModal" class="modal-close-btn">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="modal-toolbar" id="richTextToolbar">
+        <button data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+        <button data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+        <button data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+        <button data-command="strikeThrough" title="Strike Through"><i class="fas fa-strikethrough"></i></button>
+        <span class="toolbar-divider"></span>
+        <button data-command="justifyLeft" title="Align Left"><i class="fas fa-align-left"></i></button>
+        <button data-command="justifyCenter" title="Align Center"><i class="fas fa-align-center"></i></button>
+        <button data-command="justifyRight" title="Align Right"><i class="fas fa-align-right"></i></button>
+        <span class="toolbar-divider"></span>
+        <button data-command="insertUnorderedList" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+        <button data-command="insertOrderedList" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+        <span class="toolbar-divider"></span>
+        <button data-command="createLink" title="Insert Link"><i class="fas fa-link"></i></button>
+        <button data-command="unlink" title="Remove Link"><i class="fas fa-unlink"></i></button>
+      </div>
+      
+      <div id="noteContent" class="modal-body" contenteditable="true"></div>
+      
+      <div class="note-stats" id="noteStats">
+        <span id="wordCount">0 words</span> |
+        <span id="charCount">0 characters</span> |
+        <span id="readingTime">0 min read</span>
+      </div>
+      
+      <div class="modal-footer">
+        <div class="note-colors">
+          <div class="color-option default" data-color="default" title="Default"></div>
+          <div class="color-option red" data-color="red" title="Red"></div>
+          <div class="color-option orange" data-color="orange" title="Orange"></div>
+          <div class="color-option yellow" data-color="yellow" title="Yellow"></div>
+          <div class="color-option green" data-color="green" title="Green"></div>
+          <div class="color-option blue" data-color="blue" title="Blue"></div>
+          <div class="color-option purple" data-color="purple" title="Purple"></div>
+        </div>
+        
+        <div class="tags-container">
+          <div class="tags-input-container">
+            <input type="text" id="tagInput" placeholder="Add tag...">
+            <button id="addTag"><i class="fas fa-plus"></i></button>
+          </div>
+          <div id="tagsContainer" class="modal-tags"></div>
+          <div id="suggestedTags" class="suggested-tags">
+            <!-- Suggested tags will appear here -->
+          </div>
+        </div>
+        
+        <button id="saveNote" class="save-button">Save</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Share Modal -->
+  <div id="shareModal" class="modal">
+    <div class="modal-content share-modal-content">
+      <div class="modal-header">
+        <h3>Share Note</h3>
+        <button id="closeShareModal" class="modal-close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="share-link-container">
+          <input type="text" id="shareLink" readonly>
+          <button id="copyShareLink" title="Copy Link">
+            <i class="fas fa-copy"></i>
+          </button>
+        </div>
+        
+        <div class="qr-container">
+          <div id="qrCode"></div>
+          <button id="downloadQR" class="download-qr-btn">
+            <i class="fas fa-download"></i> Download QR Code
+          </button>
+        </div>
+        
+        <div class="share-options">
+          <button class="share-option" data-platform="whatsapp">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+          </button>
+          <button class="share-option" data-platform="telegram">
+            <i class="fab fa-telegram"></i> Telegram
+          </button>
+          <button class="share-option" data-platform="email">
+            <i class="fas fa-envelope"></i> Email
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Reminder Modal -->
+  <div id="reminderModal" class="modal">
+    <div class="modal-content reminder-modal-content">
+      <div class="modal-header">
+        <h3>Set Reminder</h3>
+        <button id="closeReminderModal" class="modal-close-btn">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="reminder-form">
+          <div class="form-group">
+            <label for="reminderDate">Date</label>
+            <input type="date" id="reminderDate" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="reminderTime">Time</label>
+            <input type="time" id="reminderTime" required>
+          </div>
+        </div>
+        
+        <button id="saveReminder" class="save-button">Set Reminder</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Toast Notifications -->
+  <div id="toastContainer" class="toast-container"></div>
+  
+  <!-- Scripts -->
+  <script src="js/utils.js"></script>
+  <script src="js/note.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="script.js" type="module"></script>
+</body>
+</html>
